@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Losowy Quiz Sieciowy</title>
+
+<style>
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-image: url('https://github.com/p-majchrzak/p-majchrzak.github.io/blob/main/bidul.jpg?raw=true');
+    background-repeat: repeat;
+    background-attachment: fixed;
+    color: #333;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+}
+
+/* Nowy kontener główny ułożony poziomo */
+.main-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    width: 100%;
+    max-width: 1200px;
+}
+
+.quiz-container {
+    background-color: rgba(255, 255, 255, 0.95);
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    width: 100%;
+    max-width: 700px; /* Nieco zwężony, by zmieścić gify */
+    padding: 30px;
+    box-sizing: border-box;
+    z-index: 2;
+}
+
+/* Styl dla GIF-ów po bokach */
+.side-gif {
+    width: 300px;
+    height: 600px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+/* Ukrywanie gifów na małych ekranach */
+@media (max-width: 1000px) {
+    .side-gif {
+        display: none;
+    }
+}
+
+.quiz-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #eaeaea;
+    padding-bottom: 15px;
+    margin-bottom: 25px;
+}
+
+.quiz-header h1 { margin: 0; color: #2c3e50; font-size: 1.5em; }
+.stats { font-weight: bold; color: #7f8c8d; }
+
+.question { font-size: 1.25em; font-weight: 600; margin-bottom: 10px; color: #2c3e50; }
+.hint { font-size: 0.9em; color: #e67e22; margin-bottom: 20px; font-weight: bold; }
+
+.options-container { display: flex; flex-direction: column; gap: 12px; }
+
+.option {
+    background-color: #f9f9f9;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 15px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    font-size: 1.05em;
+}
+
+.option:hover:not(.disabled) {
+    background-color: #e8f4fd;
+    border-color: #3498db;
+}
+
+.option.selected:not(.disabled) {
+    background-color: #d6eaf8;
+    border-color: #2980b9;
+}
+
+.option.correct {
+    background-color: #d4efdf !important;
+    border-color: #27ae60 !important;
+    color: #1e8449;
+}
+
+.option.incorrect {
+    background-color: #fadbd8 !important;
+    border-color: #e74c3c !important;
+    color: #c0392b;
+}
+
+.option.disabled {
+    cursor: not-allowed;
+    opacity: 0.8;
+}
+
+.option input { margin-right: 15px; transform: scale(1.3); }
+
+.btn-container { margin-top: 30px; display: flex; gap: 15px; }
+
+.btn {
+    background-color: #3498db;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 25px;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    flex: 1;
+    font-weight: bold;
+}
+
+.btn:hover:not(:disabled) { background-color: #2980b9; }
+.btn:disabled { background-color: #bdc3c7; cursor: not-allowed; }
+
+.btn.next-btn { background-color: #27ae60; display: none; }
+
+.results { text-align: center; display: none; }
+.results h2 { font-size: 2.5em; color: #2c3e50; }
+.score-big { font-size: 2em; font-weight: bold; color: #27ae60; }
+
+/* animacje */
+@keyframes correctFlash {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); background-color:#2ecc71; }
+    100% { transform: scale(1); }
+}
+
+@keyframes wrongShake {
+    0% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    50% { transform: translateX(6px); }
+    75% { transform: translateX(-6px); }
+    100% { transform: translateX(0); }
+}
+
+.correct-anim { animation: correctFlash 0.6s ease; }
+.wrong-anim { animation: wrongShake 0.4s ease; }
+
+.particle {
+    position: fixed;
+    width: 400px;
+    height: 400px;
+    pointer-events: none;
+    z-index: 9999;
+    animation: fly 1.2s ease-out forwards;
+}
+
+@keyframes fly {
+    0% { transform: scale(0.5); opacity:1; }
+    100% { transform: translate(var(--x), var(--y)) scale(1.2); opacity:0; }
+}
+</style>
+</head>
+
+<body>
+
+<audio id="sound-correct" src="https://www.myinstants.com/media/sounds/success.mp3"></audio>
+<audio id="sound-wrong" src="https://www.myinstants.com/media/sounds/error.mp3"></audio>
+
+<div class="main-wrapper">
+    <img src="https://github.com/p-majchrzak/p-majchrzak.github.io/blob/main/pierwszy.gif?raw=true" alt="Network" class="side-gif">
+
+    <div class="quiz-container" id="quizBox">
+        <div class="quiz-header">
+            <h1>Quiz CCNA / Sieci</h1>
+            <div class="stats">
+                Wynik: <span id="current-score">0</span> |
+                Pytanie: <span id="question-counter">1</span>/<span id="total-questions">0</span>
+            </div>
+        </div>
+
+        <div id="quiz-block">
+            <div class="question" id="question">Ładowanie...</div>
+            <div class="hint" id="multi-hint"></div>
+            <div class="options-container" id="options"></div>
+
+            <div class="btn-container">
+                <button class="btn" id="check-btn" onclick="checkAnswer()" disabled>Sprawdź</button>
+                <button class="btn next-btn" id="next-btn" onclick="loadNextQuestion()">Następne</button>
+            </div>
+        </div>
+
+        <div class="results" id="results-block">
+            <h2>Koniec!</h2>
+            <p>Wynik:</p>
+            <div class="score-big">
+                <span id="final-score"></span> / <span id="final-total"></span>
+            </div>
+            <button class="btn" onclick="restartQuiz()">Restart</button>
+        </div>
+    </div>
+
+    <img src="https://github.com/p-majchrzak/p-majchrzak.github.io/blob/main/drugi.gif?raw=true" alt="Server" class="side-gif">
+</div>
+
+<script>
+// (Cały Twój skrypt JavaScript pozostaje bez zmian)
+// Cały Twój skrypt JavaScript z poprawioną logiką losowania odpowiedzi
+const allQuizData = [
+    { q: "Jaki jest cel warstwy fizycznej OSI?", opts: ["kontrolowanie dostępu do mediów", "przesyłanie bitów w lokalnych mediach", "wykonywanie wykrywania błędów na otrzymanych ramkach", "wymiana ramek między węzłami za pośrednictwem fizycznych nośników sieciowych"], ans: [1], type: "single" },
+    { q: "Dlaczego do jednego połączenia światłowodowego używa się dwóch pasm światłowodowych?", opts: ["Te dwie nici pozwalają danym podróżować na większe odległości bez degradacji.", "Zapobiegają one przesłuchom spowodowaniu zakłóceń w połączeniu.", "Zwiększają one prędkość, z jaką dane mogą się przemieszczać.", "Pozwalają na pełną łączność dupleksową."], ans: [3], type: "single" },
+    { q: "Która cecha opisuje przesłuchy?", opts: ["zniekształcenie sygnału sieciowego z oświetlenia fluorescencyjnego", "zniekształcenie przesyłanych wiadomości z sygnałów przenoszonych w sąsiednich przewodach", "osłabienie sygnału sieciowego na długich długościach kabli", "utrata sygnału bezprzewodowego w nadmiernej odległości od punktu dostępu"], ans: [1], type: "single" },
+    { q: "Która procedura jest stosowana w celu zmniejszenia wpływu przesłuchu w kablach miedzianych?", opts: ["wymagające odpowiednich połączeń uziemiających", "skręcanie przeciwstawnych par przewodów obwodu razem", "owinięcie wiązki drutów metalową osłoną", "projektowanie infrastruktury kablowej, aby uniknąć zakłóceń w przesłuchach", "unikanie ostrych zagięć podczas instalacji"], ans: [1], type: "single" },
+    { q: "Administrator sieci zauważa, że przepustowość sieci wydaje się niższa niż oczekiwana. Które trzy czynniki mogą wpłynąć na różnice w przepustowości?", opts: ["ilość ruchu, który obecnie przechodzi przez sieć", "wyrafonowanie metody enkapsulacji zastosowanej do danych", "rodzaj ruchu, który przechodzi przez sieć", "opóźnienie, które jest tworzone przez liczbę urządzeń sieciowych", "przepustowość połączenia WAN z Internetem", "niezawodność infrastruktury gigabit Ethernet szkieletu"], ans: [0, 2, 3], type: "multiple" },
+    { q: "Jakie są dwie cechy kabla światłowodowego?", opts: ["Nie ma na to wpływu EMI ani RFI.", "Każda para kabli jest owinięta metalową folią.", "Łączy w sobie technikę anulowania, ekranowania i skręcania.", "Zazwyczaj zawiera 4 pary przewodów światłowodowych.", "To jest droższe niż okablowanie UTP."], ans: [0, 4], type: "multiple" },
+    { q: "Jaka jest podstawowa rola warstwy fizycznej w transmisji danych w sieci?", opts: ["stwórz sygnały, które reprezentują bity w każdej klatce na nośniku", "zapewnić fizyczne adresowanie do urządzeń", "określić ścieżkę, którą pakiety przechodzą przez sieć", "kontrola dostępu danych do mediów"], ans: [0], type: "single" },
+    { q: "Przy użyciu nieekranowanego drutu miedzianowe z skrętką w sieci, co powoduje przesłuch w parach kabli?", opts: ["pole magnetyczne wokół sąsiednich par drutów", "użycie plecionego drutu do osłaniania sąsiednich par drutów", "odbicie fali elektrycznej z tyłu z dalekiego końca kabla", "kolizja spowodowana przez dwa węzły"], ans: [0], type: "single" },
+    { q: "Oprócz długości kabla, jakie dwa czynniki mogą zakłócać komunikację przenoszoną kablami UTP?", opts: ["przesłuch", "przepustowość", "wielkość sieci", "technika modulacji sygnału", "zakłócenia elektromagnetyczne"], ans: [0, 4], type: "multiple" },
+    { q: "Które dwa urządzenia często wpływają na sieci bezprzewodowe?", opts: ["Odtwarzacze Blu-ray", "kina domowe", "telefony bezprzewodowe", "mikrofale", "żarówki żarowe", "zewnętrzne dyski twarde"], ans: [2, 3], type: "multiple" },
+    { q: "Które dwa stwierdzenia opisują usługi świadczone przez warstwę łącza danych?", opts: ["Definiuje schemat adresowania dostawy end-to-end.", "Utrzymuje ścieżkę między urządzeniami źródłowymi i docelowymi.", "Zarządza dostępem ramek do nośników sieciowych.", "Zapewnia niezawodne dostarczanie poprzez kontrolę przepływu.", "Pakuje różne PDU warstwy 3 w format ramki kompatybilny z interfejsem."], ans: [2, 4], type: "multiple" },
+    { q: "Jaka jest funkcja wartości CRC, która znajduje się w polu FCS ramki?", opts: ["aby zweryfikować integralność otrzymanej ramki", "aby zweryfikować adres fizyczny w ramce", "aby zweryfikować adres logiczny w ramce", "aby obliczyć nagłówek sumy kontrolnej"], ans: [0], type: "single" },
+    { q: "Co znajduje się w zwiastunie ramki łącza danych?", opts: ["adres logiczny", "adres fizyczny", "dane", "wykrywanie błędów"], ans: [3], type: "single" },
+    { q: "Którze stwierdzenie opisuje charakterystykę pól nagłówka ramki warstwy łącza danych?", opts: ["Wszystkie zawierają pola sterowania przepływem.", "Pola nagłówka ramki Ethernet zawierają adresy warstwy 3.", "Różnią się one w zależności od protokołów.", "Zawierają informacje o aplikacjach użytkowników."], ans: [2], type: "single" },
+    { q: "Która topologia WAN zapewnia wysoką dostępność i łączy niektóre, ale nie wszystkie, zdalne witryny?", opts: ["siatka", "częściowa siatka", "piasta i szprycha", "punkt-punkt"], ans: [1], type: "single" },
+    { q: "Które dwa pola lub funkcje bada Ethernet, aby ustalić, czy ramka jest odrzucana przez kartę sieciową?", opts: ["auto-MDIX", "CEF", "Sekwencja sprawdzania ramki", "minimalny rozmiar ramki", "źródłowy adres MAC"], ans: [2, 3], type: "multiple" },
+    { q: "Który typ komunikacji medialnej nie wymaga arbitrażu medialnego w warstwie łącza danych?", opts: ["deterministyczny", "półduplex", "pełny dupleks", "kontrolowany dostęp"], ans: [2], type: "single" },
+    { q: "Którze stwierdzenie opisuje rozszerzoną topologię gwiazdy?", opts: ["Urządzenia końcowe łączą się z centralnym urządzeniem pośrednim, które z kolei łączy się z innymi centralnymi urządzeniami pośrednimi.", "Urządzenia końcowe są połączone ze sobą magistralą.", "Każdy system końcowy jest połączony z sąsiadem.", "Wszystkie urządzenia są połączone w łańcuchu."], ans: [0], type: "single" },
+    { q: "Jaka jest cecha podwarstwy LLC?", opts: ["Zapewnia wymagany adres logiczny.", "Zapewnia rozgraniczenie danych zgodnie z fizycznymi wymaganiami.", "Umieszcza informacje w ramce, umożliwiając wiele protokołów warstwy 3 korzystanie z tego samego interfejsu.", "Definiuje procesy oprogramowania dla warstwy fizycznej."], ans: [2], type: "single" },
+    { q: "Jakie są trzy sposoby, w jakie kontrola dostępu do mediów jest wykorzystywana w sieci?", opts: ["Ethernet wykorzystuje CSMA/CD.", "MAC zapewnia umieszczanie ramek danych na nośniku.", "Dostęp oparty na sporach jest znany jako deterministyczny.", "802.11 wykorzystuje CSMA/CD.", "Protokoły warstwy łącza danych definiują zasady dostępu do różnych mediów."], ans: [0, 1, 4], type: "multiple" },
+    { q: "Podczas procesu enkapsulacji, co dzieje się na warstwie łącza danych dla komputera podłączonego do sieci Ethernet?", opts: ["Adres IP jest dodawany.", "Adres logiczny został dodany.", "Adres fizyczny został dodany.", "Dodano numer portu procesu."], ans: [2], type: "single" },
+    { q: "Jakie trzy elementy są zawarte w nagłówku Ethernet i przyczepie?", opts: ["źródłowy adres IP", "źródłowy adres MAC", "docelowy adres IP", "docelowy adres MAC", "informacje o sprawdzaniu błędów"], ans: [1, 3, 4], type: "multiple" },
+    { q: "Jaki rodzaj reguły komunikacyjnej najlepiej opisuje CSMA/CD?", opts: ["metoda dostępu", "kontrola przepływu", "enkapsulacja wiadomości", "kodowanie wiadomości"], ans: [0], type: "single" },
+    { q: "Które trzy podstawowe części są wspólne dla wszystkich typów ramek obsługiwanych przez warstwę łącza danych?", opts: ["nagłówek", "pole typu", "Rozmiar MTU", "dane", "przyczepa"], ans: [0, 3, 4], type: "multiple" },
+    { q: "Którze stwierdzenie dotyczące metody dostępu CSMA/CD w Ethernetie jest prawdziwe?", opts: ["Nie może dojść do kolizji.", "Sygnał zagłuszania powoduje algorytm odwrotu tylko u sprawców.", "Wszystkie urządzenia sieciowe muszą słuchać przed transmisją.", "Urządzenia biorące udział w kolizji otrzymują pierwszeństwo."], ans: [2], type: "single" },
+    { q: "Co to jest funkzia auto-MDIX na przełączniku?", opts: ["automatyczna konfiguracja dla 10/100/1000 Mb/s", "automatyczna konfiguracja interfejsu dla bezpośredniego lub krzyżowego połączenia", "automatyczna konfiguracja pracy pełnodupleksowej", "możliwość włączenia lub wyłączenia interfejsu"], ans: [1], type: "single" },
+    { q: "Przełącznik warstwy 2 przesyła ramki z portu 1000BASE-T na port 100Base-T. Która metoda buforowania jest najlepsza?", opts: ["buforowanie oparte na porcie", "buforowanie L1", "buforowanie pamięci współdzielonej", "naprawiono buforowanie konfiguracji"], ans: [2], type: "single" },
+    { q: "Jakie są dwa przykłady metody przełączania przecinanego (cut-through)?", opts: ["store-and-forward", "szybkie przełączanie do przodu (fast-forward)", "Przełączanie CRC", "przełączanie bez fragmentów (fragment-free)"], ans: [1, 3], type: "multiple" },
+    { q: "Która metoda przekazywania ramek odbiera całą ramkę i wykonuje kontrolę CRC przed przekadaniem?", opts: ["przełączanie przecięcia", "przełączanie store-and-forward", "przełączanie bez fragmentów", "szybkie przełączanie do przodu"], ans: [1], type: "single" },
+    { q: "Jaki jest cel pola FCS w ramce?", opts: ["aby uzyskać adres MAC", "aby zweryfikować adres logiczny", "aby obliczyć nagłówek CRC", "aby ustalić, czy wystąpiły błędy w transmisji i odbiorze"], ans: [3], type: "single" },
+    { q: "Która metoda przełączania ma najniższy poziom opóźnienia?", opts: ["przecięcie (cut-through)", "przechowuj-i-przekaż (store-and-forward)", "bez fragmentów", "szybko do przodu (fast-forward)"], ans: [3], type: "single" },
+    { q: "Administrator łączy dwa nowoczesne przełączniki kablem prostym. Które trzy stwierdzenia są poprawne?", opts: ["Łącze będzie działać z największą prędkością obu urządzeń.", "Połączenie będzie działać jako full-duplex.", "Każdy będzie pracował z własną największą prędkością.", "Funkcja auto-MDIX wyeliminuje potrzebę kabla crossover.", "Połączenie nie będzie możliwe."], ans: [0, 1, 3], type: "multiple" },
+    { q: "Jaką przewagę ma metoda przełączania store-and-forward w porównaniu z cut-through?", opts: ["wykrywanie kolizji", "sprawdzanie błędów ramki", "szybsze przekazywanie ramek", "przekazywanie ramek przy użyciu informacji IPv4"], ans: [1], type: "single" },
+    { q: "Gdy używana jest metoda store-and-forward, która część ramki Ethernet jest używana do sprawdzania błędów?", opts: ["CRC w przyczepie", "źródłowy adres MAC", "docelowy adres MAC", "typ protokołu"], ans: [0], type: "single" },
+    { q: "Która metoda przełączania wykorzystuje wartość CRC w ramce?", opts: ["przecięcie", "szybko do przodu", "bez fragmentów", "przechowuj-i-przekaż"], ans: [3], type: "single" },
+    { q: "Jakie są dwie czynności wykonywane przez przełącznik Cisco?", opts: ["budowanie tabeli routingu", "używanie źródłowych adresów MAC do budowania tabeli MAC", "przekazywanie ramek z nieznanymi IP do bramy", "wykorzystanie tabeli adresów MAC do przekazywania ramek"], ans: [1, 3], type: "multiple" },
+    { q: "Które dwa stwierdzenia opisują funkcje podwarstwy LLC?", opts: ["Sterowanie łączami logicznymi jest zaimplementowane w oprogramowaniu.", "Jest określone w standardzie IEEE 802.3.", "Podwarstwa LLC dodaje nagłówek i zwiastun.", "Warstwa łącza danych używa LLC do komunikacji z górnymi warstwami."], ans: [0, 3], type: "multiple" },
+    { q: "Czym jest funkcja auto-MDIX?", opts: ["Umożliwia automatyczną konfigurację interfejsu do kabla prostego lub krzyżowego.", "Umożliwia automatyczną konfigurację ustawień dupleksu.", "Umożliwia automatyczną konfigurację prędkości.", "Umożliwia wybór metody przekazywania."], ans: [0], type: "single" },
+    { q: "Jaka jest zaleta przełączania cut-through zamiast store-and-forward?", opts: ["poprawia przepustowość odrzucając błędne ramki", "decyduje na podstawie źródłowego MAC", "ma niższe opóźnienia dla wymagających aplikacji", "obsługuje dowolną kombinację prędkości"], ans: [2], type: "single" },
+    { q: "Który jest adresem MAC multiemisji (multicast)?", opts: ["FF-FF-FF-FF-FF-FF", "5C-26-0A-4B-19-3E", "01-00-5E-00-00-03", "00-26-0F-4B-00-3E"], ans: [2], type: "single" },
+    { q: "Co oznacza termin „tłumienie” w komunikacji danych?", opts: ["utrata siły sygnału wraz ze wzrostem odległości", "czas, aby sygnał dotarł do celu", "wyciek sygnałów z jednej pary kabli do drugiej", "wzmocnienie sygnału przez urządzenie"], ans: [0], type: "single" },
+    { q: "Co sprawia, że światłowód jest lepszy od miedzi do łączenia budynków? (Wybierz trzy)", opts: ["większe odległości", "niższy koszt instalacji", "ograniczona podatność na EMI/RFI", "trwałe połączenia", "większy potencjał przepustowości"], ans: [0, 2, 4], type: "multiple" },
+    { q: "Jaki termin warstwy fizycznej OSI opisuje proces, w którym jedna fala modyfikuje inną falę?", opts: ["modulacja", "IEEE", "OIA/TIA", "powietrze"], ans: [0], type: "single" },
+    { q: "Jaki termin warstwy fizycznej OSI opisuje pojemność, z jaką nośnik może przenosić dane?", opts: ["przepustowość", "IEEE", "OIA/TIA", "powietrze"], ans: [0], type: "single" },
+    { q: "Jaki termin opisuje miarę transferu bitów przez medium w danym okresie czasu?", opts: ["przepustowość", "przepustowość (throughput)", "opóźnienie", "dobry put"], ans: [1], type: "single" },
+    { q: "Jaki termin opisuje czas (w tym opóźnienia) na podróż danych z punktu do punktu?", opts: ["opóźnienie", "przepustowość", "dobry put", "powietrze"], ans: [0], type: "single" },
+    { q: "Jaki termin opisuje miarę użytecznych danych przesyłanych w danym okresie czasu?", opts: ["dobry put", "kabel światłowodowy", "powietrze", "kabel miedziany"], ans: [0], type: "single" },
+    { q: "Jaki termin opisuje medium fizyczne, które wykorzystuje impulsy elektryczne?", opts: ["kabel miedziany", "kabel światłowodowy", "powietrze", "dobry put"], ans: [0], type: "single" },
+    { q: "Jaki termin opisuje medium fizyczne wykorzystujące propagację światła?", opts: ["kabel światłowodowy", "dobry put", "opóźnienie", "przepustowość"], ans: [0], type: "single" },
+    { q: "Jaki termin opisuje fizyczne medium dla transmisji mikrofalowych?", opts: ["powietrze", "dobry put", "opóźnienie", "przepustowość"], ans: [0], type: "single" },
+    { q: "Które dwie funkcje są wykonywane na podwarstwie MAC?", opts: ["Dodaje informacje kontrolne warstwy 2.", "Umieszcza informacje identyfikujące protokół warstwy sieciowej.", "Kontroluje kartę sieciową odpowiedzialną za wysyłanie i odbieranie danych.", "Wdraża przyczepę do wykrywania błędów.", "Umożliwia IPv4 i IPv6 korzystanie z tego samego interfejsu."], ans: [2, 3], type: "multiple" },
+    { q: "Jakie działanie nastąpi, jeśli przełącznik otrzyma ramkę z docelowym adresem MAC FF:FF:FF:FF:FF:FF?", opts: ["Przełącznik przekierowuje go ze wszystkich portów z wyjątkiem wejściowego.", "Przełącznik odświeża timer.", "Przełącznik nie przekazuje ramki.", "Przełącznik wysyła ramkę do routera."], ans: [0], type: "single" },
+    { q: "Jakie działanie nastąpi, jeśli host otrzyma ramkę z adresem MAC FF:FF:FF:FF:FF:FF?", opts: ["Host przetworzy ramkę.", "Host przekazuje ramkę do routera.", "Host wysyła ramkę do przełącznika.", "Host przekazuje ramkę do wszystkich innych hostów."], ans: [0], type: "single" },
+    { q: "Jakie działanie nastąpi, jeśli przełącznik otrzyma ramkę i ma źródłowy adres MAC w tabeli MAC?", opts: ["Przełącznik odświeża timer na tym wpisie.", "Przełącznik dodaje go do tabeli z numerem portu.", "Przełącznik przekazuje ramkę do powiązanego portu.", "Przełącznik wysyła ramkę do routera."], ans: [0], type: "single" },
+    { q: "Jakie działanie nastąpi, jeśli host otrzyma ramkę z adresem MAC, którego nie rozpoznaje?", opts: ["Host odrzuci ramkę.", "Host odpowiada na przełącznik adresem IP.", "Host przekazuje ramkę dalej.", "Host zwraca ramkę."], ans: [0], type: "single" },
+    { q: "Jaki typ kabla UTP służy do podłączenia komputera do portu przełącznika?", opts: ["konsola", "przewrócenie", "crossover", "prosto (straight-through)"], ans: [3], type: "single" },
+    { q: "Jaka jest maksymalna odległość segmentu dla kabli UTP?", opts: ["100 m", "500 m", "10 m", "1000 m"], ans: [0], type: "single" },
+    { q: "Który typ złącza jest używany w miedzianym okablowaniu 1000BASE-T?", opts: ["RJ-45", "ST", "LC", "SC"], ans: [0], type: "single" },
+    { q: "Jaki adres jest używany w warstwie 2 do identyfikacji urządzenia?", opts: ["adres MAC", "adres IP", "adres portu", "adres URL"], ans: [0], type: "single" },
+    { q: "Czym różni się topologia logiczna od fizycznej?", opts: ["Logiczna określa ścieżkę przesyłu danych, fizyczna sposób połączenia kabli.", "Fizyczna określa protokoły, logiczna kable.", "Nie różnią się niczym.", "Logiczna dotyczy tylko sieci WAN."], ans: [0], type: "single" },
+    { q: "Która metoda transmisji pozwala na jednoczesne wysyłanie i odbieranie danych?", opts: ["pełny dupleks", "półdupleks", "simplex", "multicast"], ans: [0], type: "single" },
+    { q: "Który element ramki Ethernet służy do synchronizacji między urządzeniami?", opts: ["preambuła", "FCS", "nagłówek", "typ"], ans: [0], type: "single" },
+    { q: "Z jakich dwóch części składa się adres MAC?", opts: ["OUI (identyfikator organizacji) oraz unikalny numer seryjny", "Adres sieci i adres hosta", "Prefiks i identyfikator interfejsu", "Numer portu i IP"], ans: [0], type: "single" },
+    { q: "Na jakie dwie podwarstwy dzieli się warstwa łącza danych Ethernet?", opts: ["LLC i MAC", "TCP i IP", "Fizyczna i Sieciowa", "UDP i ICMP"], ans: [0], type: "single" },
+    { q: "Co robi przełącznik, gdy otrzyma ramkę Unicast, a docelowego adresu MAC nie ma w tabeli?", opts: ["Przesyła ramkę na wszystkie porty (flood) oprócz źródłowego.", "Odrzuca ramkę.", "Wysyła zapytanie do routera.", "Przechowuje ją w buforze na stałe."], ans: [0], type: "single" },
+    { q: "Jakie działanie podejmie host, gdy otrzyma ramkę Broadcast?", opts: ["Przetworzy ramkę.", "Zignoruje ją.", "Prześle ją do routera.", "Odeśle ją do przełącznika."], ans: [0], type: "single" },
+    { q: "Kiedy przełącznik odświeża licznik (timer) wpisu w tabeli MAC?", opts: ["Gdy otrzyma ramkę z adresem źródłowym, który już jest w tabeli.", "Gdy ramka zostanie dostarczona do celu.", "Gdy urządzenie zostanie wyłączone.", "Co 300 sekund automatycznie."], ans: [0], type: "single" },
+    { q: "Co robi host z ramką Unicast, która nie jest adresowana do niego?", opts: ["Odrzuca ją.", "Przesyła ją dalej.", "Przetwarza ją mimo wszystko.", "Odpowiada błędem."], ans: [0], type: "single" },
+    { q: "Która podwarstwa odpowiada za komunikację z wyższymi warstwami stosu protokołów?", opts: ["LLC", "MAC", "Fizyczna", "Transportowa"], ans: [0], type: "single" }
+];
+
+let currentQuestion;
+let score = 0;
+let questionIndex = 0;
+let userSelections = [];
+let availableQuestions = [];
+let randomizedOptions = []; // Nowa zmienna przechowująca przemieszane opcje
+
+const questionEl = document.getElementById("question");
+const optionsEl = document.getElementById("options");
+const checkBtn = document.getElementById("check-btn");
+const nextBtn = document.getElementById("next-btn");
+
+function initQuiz() {
+    availableQuestions = [...allQuizData].sort(() => Math.random() - 0.5);
+    score = 0;
+    questionIndex = 0;
+    document.getElementById("current-score").innerText = 0;
+    document.getElementById("total-questions").innerText = availableQuestions.length;
+    document.getElementById("quiz-block").style.display = "block";
+    document.getElementById("results-block").style.display = "none";
+    loadNextQuestion();
+}
+
+function loadNextQuestion() {
+    if (questionIndex >= availableQuestions.length) {
+        showResults();
+        return;
+    }
+
+    currentQuestion = availableQuestions[questionIndex];
+    userSelections = [];
+
+    document.getElementById("question-counter").innerText = questionIndex + 1;
+    questionEl.innerText = currentQuestion.q;
+
+    // Przygotowanie przemieszanych opcji
+    randomizedOptions = currentQuestion.opts.map((text, index) => ({
+        text: text,
+        isCorrect: currentQuestion.ans.includes(index)
+    })).sort(() => Math.random() - 0.5);
+
+    optionsEl.innerHTML = "";
+    checkBtn.disabled = true;
+    checkBtn.style.display = "block";
+    nextBtn.style.display = "none";
+
+    randomizedOptions.forEach((opt, i) => {
+        const div = document.createElement("div");
+        div.className = "option";
+        div.innerHTML = `<input type="checkbox"><label>${opt.text}</label>`;
+        div.onclick = () => toggle(i, div);
+        optionsEl.appendChild(div);
+    });
+}
+
+function toggle(i, el) {
+    if (currentQuestion.type === "single") {
+        document.querySelectorAll(".option").forEach(o => {
+            o.classList.remove("selected");
+            o.querySelector("input").checked = false;
+        });
+        userSelections = [i];
+        el.classList.add("selected");
+        el.querySelector("input").checked = true;
+        checkBtn.disabled = false;
+    } else {
+        if (userSelections.includes(i)) {
+            userSelections = userSelections.filter(x => x !== i);
+            el.classList.remove("selected");
+        } else {
+            userSelections.push(i);
+            el.classList.add("selected");
+        }
+        // Liczba potrzebnych odpowiedzi pobierana z oryginalnej tablicy ans
+        checkBtn.disabled = userSelections.length !== currentQuestion.ans.length;
+    }
+}
+
+function checkAnswer() {
+    let isCorrect = true;
+    const optionsList = document.querySelectorAll(".option");
+    
+    optionsList.forEach(o => o.classList.add("disabled"));
+
+    // Sprawdzanie poprawności na podstawie nowej tablicy randomizedOptions
+    const correctCount = randomizedOptions.filter(o => o.isCorrect).length;
+    let userCorrectCount = 0;
+
+    userSelections.forEach(index => {
+        if (randomizedOptions[index].isCorrect) {
+            userCorrectCount++;
+        } else {
+            isCorrect = false; // Wybrano błędną odpowiedź
+        }
+    });
+
+    if (userCorrectCount !== correctCount) isCorrect = false;
+
+    // Kolorowanie
+    randomizedOptions.forEach((opt, index) => {
+        const optionEl = optionsList[index];
+        const isSelected = userSelections.includes(index);
+
+        if (opt.isCorrect) {
+            optionEl.classList.add("correct");
+        } else if (isSelected && !opt.isCorrect) {
+            optionEl.classList.add("incorrect");
+        }
+    });
+
+    if (isCorrect) {
+        score++;
+        document.getElementById("current-score").innerText = score;
+        document.getElementById("sound-correct").play();
+        spawnParticles();
+        document.getElementById("quizBox").classList.add("correct-anim");
+    } else {
+        document.getElementById("sound-wrong").play();
+        document.getElementById("quizBox").classList.add("wrong-anim");
+    }
+
+    setTimeout(() => {
+        document.getElementById("quizBox").classList.remove("correct-anim", "wrong-anim");
+    }, 500);
+
+    checkBtn.style.display = "none";
+    nextBtn.style.display = "block";
+    questionIndex++;
+}
+
+function showResults() {
+    document.getElementById("quiz-block").style.display = "none";
+    document.getElementById("results-block").style.display = "block";
+    document.getElementById("final-score").innerText = score;
+    document.getElementById("final-total").innerText = availableQuestions.length;
+}
+
+function restartQuiz() { initQuiz(); }
+
+function spawnParticles() {
+    for (let i = 0; i < 15; i++) {
+        const img = document.createElement("img");
+        img.src = "https://github.com/p-majchrzak/p-majchrzak.github.io/blob/main/bidul.jpg?raw=true";
+        img.className = "particle";
+        img.style.left = (window.innerWidth / 2 - 100) + "px";
+        img.style.top = (window.innerHeight / 2 - 100) + "px";
+        img.style.setProperty("--x", (Math.random() - 0.5) * 800 + "px");
+        img.style.setProperty("--y", (Math.random() - 0.5) * 800 + "px");
+        document.body.appendChild(img);
+        setTimeout(() => img.remove(), 1500);
+    }
+}
+
+window.onload = initQuiz;
+</script>
+
+</body>
+</html>
