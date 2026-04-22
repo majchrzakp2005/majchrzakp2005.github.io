@@ -7,7 +7,7 @@
 
 <style>
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     color: #333;
     margin: 0;
     padding: 0;
@@ -15,10 +15,10 @@ body {
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    overflow: hidden;
-    position: relative;
     background-color: #000;
-    text-shadow: 0 0 10px rgba(255,255,255,0.8);
+    overflow-x: hidden;
+    overflow-y: auto;
+    position: relative;
 }
 
 body::before, body::after {
@@ -26,107 +26,150 @@ body::before, body::after {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: -1;
-    background-image: url('https://github.com/majchrzakp2005/majchrzakp2005.github.io/blob/main/nowybidul.png?raw=true');
-
-    background-size: 100% 100%;
-
-    background-repeat: repeat; 
-    opacity: 0.7;
-}
-
-
-body::after {
+    width: 100%;
+    height: 100%;
     z-index: -2;
-    opacity: 0.4;
-
-    animation: explode 2s steps(2) infinite, infiniteScroll 0.2s linear infinite;
-    filter: contrast(200%) brightness(1.5);
+    background-image: url('https://github.com/majchrzakp2005/majchrzakp2005.github.io/blob/main/nowybidul.png?raw=true');
+    background-size: cover;
+    background-position: center;
+    opacity: 0.2;
+    pointer-events: none;
 }
 
-body::before {
-   
-    animation: glitchMain 4s linear infinite, infiniteScroll 0.4s linear infinite;
-}
-
-
-@keyframes infiniteScroll {
-    from {
-        background-position: 0 0;
+@media (min-width: 1025px) {
+    body::before {
+        animation: glitchMain 4s linear infinite, infiniteScroll 10s linear infinite;
+        opacity: 0.4;
     }
-    to {
-       
-        background-position: -100% 0;
+    body::after {
+        z-index: -3;
+        opacity: 0.15;
+        animation: explode 3s steps(2) infinite;
+        filter: contrast(150%) brightness(1.2);
     }
-}
-@keyframes glitchMain {
-    0%, 100% { transform: scale(1) translate(0); filter: none; }
-    92% { transform: scale(1.1) translate(20px, -10px); filter: hue-rotate(90deg); }
-    94% { transform: scale(1.2) translate(-30px, 15px); filter: invert(0.3); }
-    96% { transform: scale(1.1) translate(40px, 0); filter: brightness(2); }
-    98% { transform: scale(1.3) translate(-15px, -25px); }
-}
-
-@keyframes explode {
-    0%, 100% { clip-path: inset(0 0 0 0); }
-    15% { clip-path: inset(30% 0 60% 0); transform: skewX(20deg); }
-    30% { clip-path: inset(10% 80% 20% 0); transform: skewY(-10deg); }
-    45% { clip-path: inset(50% 10% 10% 50%); transform: scale(1.5); }
-    70% { clip-path: inset(0 40% 0 40%); transform: scale(0.8); }
-    85% { clip-path: inset(80% 0 0 0); transform: translateY(50px); }
 }
 
 .main-wrapper {
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 20px;
     width: 100%;
-    max-width: 1200px;
+    max-width: 1400px;
+    padding: 15px;
+    box-sizing: border-box;
+}
+
+@media (min-width: 1100px) {
+    .main-wrapper {
+        flex-direction: row;
+        padding: 40px;
+    }
 }
 
 .quiz-container {
-    background-color: rgba(255, 255, 255, 0.5); 
-    border-radius: 12px;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     width: 100%;
     max-width: 700px;
-    padding: 30px;
+    padding: 20px;
     box-sizing: border-box;
-    z-index: 2;
-    
-    backdrop-filter: blur(10px);
+    z-index: 5;
+    backdrop-filter: blur(8px);
+}
+
+@media (min-width: 768px) {
+    .quiz-container {
+        padding: 30px;
+    }
 }
 
 .side-gif {
+    display: none;
     width: 300px;
     height: 600px;
     border-radius: 10px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
 }
 
-@media (max-width: 1000px) {
-    .side-gif { display: none; }
+@media (min-width: 1100px) {
+    .side-gif { display: block; }
+}
+
+.dvd-container {
+    display: none;
+}
+
+@media (min-width: 1025px) {
+    .dvd-container {
+        display: block;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: -1;
+        pointer-events: none;
+    }
+}
+
+.dvd-image {
+    position: absolute;
+    width: 180px;
+    height: auto;
+    opacity: 1;
 }
 
 .quiz-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 2px solid #eaeaea;
+    border-bottom: 2px solid #eee;
     padding-bottom: 15px;
     margin-bottom: 25px;
+    text-align: center;
 }
 
-.quiz-header h1 { margin: 0; color: #2c3e50; font-size: 1.5em; }
-.stats { font-weight: bold; color: #7f8c8d; }
+@media (min-width: 600px) {
+    .quiz-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        text-align: left;
+    }
+}
 
-.question { font-size: 1.25em; font-weight: 600; margin-bottom: 10px; color: #2c3e50; }
-.hint { font-size: 0.9em; color: #e67e22; margin-bottom: 20px; font-weight: bold; }
+.quiz-header h1 {
+    margin: 0;
+    color: #2c3e50;
+    font-size: 1.5em;
+}
 
-.options-container { display: flex; flex-direction: column; gap: 12px; }
+.stats {
+    font-size: 0.9em;
+    color: #7f8c8d;
+    font-weight: bold;
+}
+
+.question {
+    font-size: 1.25em;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: #2c3e50;
+    line-height: 1.4;
+}
+
+.hint {
+    font-size: 0.9em;
+    color: #e67e22;
+    margin-bottom: 20px;
+    font-weight: bold;
+}
+
+.options-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
 
 .option {
     background-color: #f9f9f9;
@@ -138,18 +181,20 @@ body::before {
     display: flex;
     align-items: center;
     font-size: 1.05em;
-    user-select: none; 
+    user-select: none;
+    min-height: 50px;
 }
 
-.option:hover:not(.disabled) {
-    background-color: #e8f4fd;
-    border-color: #3498db;
+@media (hover: hover) {
+    .option:hover:not(.disabled) {
+        background-color: #e8f4fd;
+        border-color: #3498db;
+    }
 }
 
 .option.selected:not(.disabled) {
     background-color: #d6eaf8;
     border-color: #2980b9;
-    font-weight: 600;
 }
 
 .option.correct {
@@ -164,15 +209,19 @@ body::before {
     color: #c0392b;
 }
 
-.option.disabled {
-    cursor: not-allowed;
-    opacity: 0.8;
-}
-.option input { 
-    display: none; 
+.option.disabled { cursor: not-allowed; }
+.option input { display: none; }
+
+.btn-container {
+    margin-top: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 }
 
-.btn-container { margin-top: 30px; display: flex; gap: 15px; }
+@media (min-width: 480px) {
+    .btn-container { flex-direction: row; }
+}
 
 .btn {
     background-color: #3498db;
@@ -187,87 +236,73 @@ body::before {
     font-weight: bold;
 }
 
-.btn:hover:not(:disabled) { background-color: #2980b9; }
+.btn:active { transform: scale(0.98); }
 .btn:disabled { background-color: #bdc3c7; cursor: not-allowed; }
-
 .btn.next-btn { background-color: #27ae60; display: none; }
 
 .results { text-align: center; display: none; }
-.results h2 { font-size: 2.5em; color: #2c3e50; }
-.score-big { font-size: 2em; font-weight: bold; color: #27ae60; }
+.score-big { 
+    font-size: 2.5em; 
+    font-weight: bold; 
+    color: #27ae60; 
+    margin: 20px 0;
+}
+
+@keyframes infiniteScroll {
+    from { background-position: 0 0; }
+    to { background-position: -100% 0; }
+}
+
+@keyframes glitchMain {
+    0%, 100% { transform: scale(1) translate(0); }
+    94% { transform: scale(1.05) translate(-5px, 5px); }
+}
+
+@keyframes explode {
+    0%, 100% { clip-path: inset(0 0 0 0); }
+    50% { clip-path: inset(20% 0 40% 0); }
+}
+
+.correct-anim { animation: correctFlash 0.6s ease; }
+.wrong-anim { animation: wrongShake 0.4s ease; }
 
 @keyframes correctFlash {
     0% { transform: scale(1); }
-    50% { transform: scale(1.05); background-color:#2ecc71; }
+    50% { transform: scale(1.02); background-color:#2ecc71; }
     100% { transform: scale(1); }
 }
 
 @keyframes wrongShake {
     0% { transform: translateX(0); }
     25% { transform: translateX(-6px); }
-    50% { transform: translateX(6px); }
-    75% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
     100% { transform: translateX(0); }
 }
 
-.correct-anim { animation: correctFlash 0.6s ease; }
-.wrong-anim { animation: wrongShake 0.4s ease; }
-
 .particle {
     position: fixed;
-    width: 400px;
-    height: 400px;
+    width: 100px;
+    height: 100px;
     pointer-events: none;
     z-index: 9999;
     animation: fly 1.2s ease-out forwards;
+}
+
+@media (min-width: 768px) {
+    .particle { width: 400px; height: 400px; }
 }
 
 @keyframes fly {
     0% { transform: scale(0.5); opacity:1; }
     100% { transform: translate(var(--x), var(--y)) scale(1.2); opacity:0; }
 }
-.dvd-container {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: -1.5;
-    pointer-events: none;
-}
 
-.dvd-image {
-    position: absolute;
-    width: 180px; 
-    height: auto;
-    opacity: 1;
-}
-.img1 {
-    animation: bounceX 7.3s linear infinite alternate, 
-               bounceY 5.1s linear infinite alternate;
-}
+@keyframes bounceX { from { left: 0; } to { left: calc(100vw - 180px); } }
+@keyframes bounceY { from { top: 0; } to { top: calc(100vh - 140px); } }
 
-.img2 {
-    animation: bounceX 10.5s linear infinite alternate, 
-               bounceY 4.2s linear infinite alternate;
-    animation-delay: -2s; 
-}
-
-.img3 {
-    animation: bounceX 8.7s linear infinite alternate, 
-               bounceY 6.8s linear infinite alternate;
-    animation-delay: -5s; 
-}
-
-@keyframes bounceX {
-    from { left: 0; }
-    to { left: calc(100vw - 180px); }
-}
-
-@keyframes bounceY {
-    from { top: 0; }
-    to { top: calc(100vh - 140px); }
-}
+.img1 { animation: bounceX 7.3s linear infinite alternate, bounceY 5.1s linear infinite alternate; }
+.img2 { animation: bounceX 10.5s linear infinite alternate, bounceY 4.2s linear infinite alternate; animation-delay: -2s; }
+.img3 { animation: bounceX 8.7s linear infinite alternate, bounceY 6.8s linear infinite alternate; animation-delay: -5s; }
 </style>
 </head>
 
