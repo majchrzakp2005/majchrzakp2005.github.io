@@ -226,6 +226,48 @@ body::before {
     0% { transform: scale(0.5); opacity:1; }
     100% { transform: translate(var(--x), var(--y)) scale(1.2); opacity:0; }
 }
+.dvd-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1.5;
+    pointer-events: none;
+}
+
+.dvd-image {
+    position: absolute;
+    width: 180px; 
+    height: auto;
+    opacity: 1;
+}
+.img1 {
+    animation: bounceX 7.3s linear infinite alternate, 
+               bounceY 5.1s linear infinite alternate;
+}
+
+.img2 {
+    animation: bounceX 10.5s linear infinite alternate, 
+               bounceY 4.2s linear infinite alternate;
+    animation-delay: -2s; 
+}
+
+.img3 {
+    animation: bounceX 8.7s linear infinite alternate, 
+               bounceY 6.8s linear infinite alternate;
+    animation-delay: -5s; 
+}
+
+@keyframes bounceX {
+    from { left: 0; }
+    to { left: calc(100vw - 180px); }
+}
+
+@keyframes bounceY {
+    from { top: 0; }
+    to { top: calc(100vh - 140px); }
+}
 </style>
 </head>
 
@@ -233,7 +275,11 @@ body::before {
 
 <audio id="sound-correct" src="https://raw.githubusercontent.com/majchrzakp2005/majchrzakp2005.github.io/main/pach.mp3"></audio>
 <audio id="sound-wrong" src="https://raw.githubusercontent.com/majchrzakp2005/majchrzakp2005.github.io/main/zwatpienie.mp3"></audio>
-
+<div class="dvd-container">
+    <img src="https://github.com/majchrzakp2005/majchrzakp2005.github.io/blob/main/nowybidul.png?raw=true" class="dvd-image img1" alt="Bouncing 1">
+    <img src="https://github.com/majchrzakp2005/majchrzakp2005.github.io/blob/main/nowybidul.png?raw=true" class="dvd-image img2" alt="Bouncing 2">
+    <img src="https://github.com/majchrzakp2005/majchrzakp2005.github.io/blob/main/nowybidul.png?raw=true" class="dvd-image img3" alt="Bouncing 3">
+</div>
 <div class="main-wrapper">
     <img src="https://github.com/majchrzakp2005/majchrzakp2005.github.io/blob/main/pierwszy.gif?raw=true" alt="Network" class="side-gif">
 
