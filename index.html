@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sieci - Test 3</title>
+<title>Sieci - TEST 3</title>
+<link rel="icon" type="image/jpeg" href="https://github.com/majchrzakp2005/majchrzakp2005.github.io/blob/main/bidultrzeci.JPEG?raw=true">
 <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Montserrat:wght@800;900&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -524,13 +525,109 @@ body::before {
         font-size: 1.1em;
     }
 }
+.leaderboard-container {
+    display: none; 
+    background: var(--light);
+    border: 8px solid var(--dark);
+    box-shadow: 15px 15px 0px var(--secondary);
+    width: 280px;
+    transform: rotate(2deg);
+    padding: 15px;
+    box-sizing: border-box;
+    text-align: center;
+}
+
+.leaderboard-container h3 {
+    font-family: 'Bangers', cursive;
+    font-size: 2.2em;
+    color: var(--primary);
+    margin: 0 0 10px 0;
+    text-shadow: 3px 3px 0px var(--dark);
+    letter-spacing: 2px;
+}
+
+.leaderboard-container table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 900;
+}
+
+.leaderboard-container th, .leaderboard-container td {
+    border: 4px solid var(--dark);
+    padding: 8px 5px;
+    font-size: 1em;
+}
+
+.leaderboard-container th {
+    background: var(--dark);
+    color: var(--light);
+    font-family: 'Bangers', cursive;
+    font-size: 1.2em;
+    letter-spacing: 1px;
+}
+
+.leaderboard-container tr:nth-child(even) {
+    background-color: var(--success);
+}
+
+.leaderboard-container tr:nth-child(odd) {
+    background-color: #fff;
+}
+
+@media (min-width: 1200px) {
+    .leaderboard-container {
+        display: block;
+    }
+}
+.countdown-box {
+    display: none;
+    background: var(--light);
+    border: 8px solid var(--dark);
+    box-shadow: -15px 15px 0px var(--primary);
+    width: 280px;
+    transform: rotate(-2deg);
+    padding: 20px;
+    box-sizing: border-box;
+    text-align: center;
+}
+
+.countdown-box h3 {
+    font-family: 'Bangers', cursive;
+    font-size: 2.2em;
+    color: var(--dark);
+    margin: 0 0 10px 0;
+    text-shadow: 3px 3px 0px var(--secondary);
+    letter-spacing: 2px;
+}
+
+#timer-display {
+    font-family: 'Bangers', cursive;
+    font-size: 1.8em;
+    color: var(--primary);
+    line-height: 1.2;
+}
+
+#timer-display span {
+    display: block;
+    font-size: 0.6em;
+    font-family: 'Montserrat', sans-serif;
+    color: var(--dark);
+    text-transform: uppercase;
+}
+
+@media (min-width: 1200px) {
+    .countdown-box {
+        display: block;
+    }
+}
 </style>
 </head>
 
 <body>
 
-<audio id="sound-correct" src="https://raw.githubusercontent.com/majchrzakp2005/majchrzakp2005.github.io/main/pach.mp3"></audio>
-<audio id="sound-wrong" src="https://raw.githubusercontent.com/majchrzakp2005/majchrzakp2005.github.io/main/zwatpienie.mp3"></audio>
+<audio id="sound-correct" src="https://raw.githubusercontent.com/majchrzakp2005/majchrzakp2005.github.io/main/dobrze.mp3"></audio>
+<audio id="sound-wrong" src="https://raw.githubusercontent.com/majchrzakp2005/majchrzakp2005.github.io/main/pechnowy.mp3"></audio>
 
 <div class="dvd-container">
     <img src="https://github.com/majchrzakp2005/majchrzakp2005.github.io/blob/main/bidul.jpg?raw=true" class="dvd-image img1" alt="Bouncing 1">
@@ -541,6 +638,19 @@ body::before {
 <div class="main-wrapper">
     <div class="side-panel left">
         <img src="https://github.com/majchrzakp2005/majchrzakp2005.github.io/blob/main/pierwszy.gif?raw=true" alt="Network" class="side-gif">
+        <div class="leaderboard-container" id="leaderboard">
+        <h3>TOP 5 (24H)</h3>
+        <table id="leaderboard-table">
+        <thead>
+            <tr>
+                <th>WYNIK</th>
+                <th>GODZINA</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+        </table>
+    </div>
     </div>
 
     <div class="quiz-container" id="quizBox">
@@ -574,10 +684,27 @@ body::before {
 
     <div class="side-panel right">
         <img src="https://github.com/majchrzakp2005/majchrzakp2005.github.io/blob/main/drugi.gif?raw=true" alt="Server" class="side-gif">
+        <div class="countdown-box">
+            <h3>KOLOKWIUM ZA:</h3>
+        <div id="timer-display">ŁADOWANIE...</div>
+    </div>
     </div>
 </div>
-
+<audio id="exitSong">
+    <source src="https://raw.githubusercontent.com/majchrzakp2005/majchrzakp2005.github.io/main/zwatpienie.mp3" type="audio/mpeg">
+</audio>
 <script>
+const audio = document.getElementById('exitSong');
+    window.addEventListener('beforeunload', function (e) {
+        audio.play();
+        const confirmationMessage = 'Do nauki a nie!';
+        (e || window.event).returnValue = confirmationMessage; 
+        return confirmationMessage;
+    });
+
+    document.addEventListener('click', () => {
+        console.log("Dźwięk odblokowany przez interakcję.");
+    }, { once: true });
 const allQuizData = [
     { q: "Która informacja jest używana przez routery do przekazywania pakietu danych w kierunku jego celu?", opts: ["źródłowy adres IP", "docelowy adres IP", "źródłowy adres warstwy łącza danych", "docelowy adres warstwy łącza danych"], ans: [1], type: "single" },
     { q: "Komputer musi wysłać pakiet do hosta docelowego w tej samej sieci LAN. Jak zostanie wysłany pakiet?", opts: ["Pakiet zostanie wysłany najpierw do bramy domyślnej, a następnie, w zależności od odpowiedzi z bramy, może zostać wysłany do hosta docelowego.", "Pakiet zostanie wysłany bezpośrednio do hosta docelowego.", "Pakiet zostanie wysłany najpierw do bramy domyślnej, a następnie z bramy domyślnej zostanie wysłany bezpośrednio do hosta docelowego.", "Pakiet zostanie wysłany tylko do bramy domyślnej."], ans: [1], type: "single" },
@@ -802,6 +929,7 @@ function showResults() {
     document.getElementById("results-block").style.display = "block";
     document.getElementById("final-score").innerText = score;
     document.getElementById("final-total").innerText = availableQuestions.length;
+    saveScore(score);
 }
 
 function restartQuiz() { initQuiz(); }
@@ -820,8 +948,84 @@ function spawnParticles() {
     }
 }
 
+function setCookie(name, value, days) {
+    let expires = "";
+    if (days) {
+        let date = new Date();
+        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+        expires = "; expires=" + date.toUTCString();
+    }
+    document.cookie = name + "=" + (value || "")  + expires + "; path=/";
+}
 
-window.onload = initQuiz;
+function getCookie(name) {
+    let nameEQ = name + "=";
+    let ca = document.cookie.split(';');
+    for(let i = 0; i < ca.length; i++) {
+        let c = ca[i];
+        while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+        if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+    }
+    return null;
+}
+
+function updateLeaderboard() {
+    let scores = JSON.parse(getCookie("quizScores") || "[]");
+    let now = new Date().getTime();
+    scores = scores.filter(s => now - s.time <= 24 * 60 * 60 * 1000);
+    
+    let tbody = document.querySelector("#leaderboard-table tbody");
+    tbody.innerHTML = "";
+    
+    scores.forEach(s => {
+        let d = new Date(s.time);
+        let timeStr = d.getHours().toString().padStart(2, '0') + ":" + d.getMinutes().toString().padStart(2, '0');
+        let tr = document.createElement("tr");
+        tr.innerHTML = `<td>${s.score}</td><td>${timeStr}</td>`;
+        tbody.appendChild(tr);
+    });
+}
+
+function saveScore(newScore) {
+    let scores = JSON.parse(getCookie("quizScores") || "[]");
+    let now = new Date().getTime();
+    scores.push({ score: newScore, time: now });
+    scores = scores.filter(s => now - s.time <= 24 * 60 * 60 * 1000);
+    scores.sort((a, b) => b.score - a.score);
+    scores = scores.slice(0, 5);
+    setCookie("quizScores", JSON.stringify(scores), 1);
+    updateLeaderboard();
+}
+function startCountdown() {
+    const targetDate = new Date("May 7, 2026 15:00:00").getTime();
+    const timerEl = document.getElementById("timer-display");
+
+    const timerInterval = setInterval(() => {
+        const now = new Date().getTime();
+        const distance = targetDate - now;
+
+        if (distance < 0) {
+            clearInterval(timerInterval);
+            timerEl.innerHTML = "Już po kolokwium.";
+            return;
+        }
+
+        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+        timerEl.innerHTML = `
+            ${days}D ${hours}H<br>
+            ${minutes}M ${seconds}S
+        `;
+    }, 1000);
+}
+startCountdown();
+window.onload = () => {
+    initQuiz();
+    updateLeaderboard();
+};
 </script>
 
 </body>
